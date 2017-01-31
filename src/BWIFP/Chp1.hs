@@ -35,6 +35,7 @@ circleArea r = pi * square r
 {- 1.2.1 Reduction. -}
 
 -- 1.2.3
+-- https://github.com/sellout/recursion-scheme-talk/blob/master/nanopass-compiler-talk.org
 -- https://www.schoolofhaskell.com/user/bartosz/understanding-algebras
 
 -- Functor's fixed point.
@@ -68,10 +69,10 @@ type Algebra f a = f a -> a
 -- Algebra which evaluates expressions.
 type ExprEvalAlgebra a = Algebra ExprF a
 
-evalNode :: Num a => ExprEvalAlgebra a 
-evalNode Zero     = 0
-evalNode (Succ n) = n + 1
-evalNode (Pred n) = n - 1
+evalExprAlg :: Num a => ExprEvalAlgebra a 
+evalExprAlg Zero     = 0
+evalExprAlg (Succ n) = n + 1
+evalExprAlg (Pred n) = n - 1
 
 
 -- Definition of initial algebra.
@@ -83,3 +84,78 @@ initAlg = Fix
 
 -- Initial algebra for expressions.
 type ExprInitAlgebra = InitAlgebra ExprF
+
+
+-- Catamorphism.
+cata :: Functor f => Algebra f a -> Fix f -> a
+cata alg = alg . fmap (cata alg) . unFix
+
+
+-- Evaluator for expressions.
+evalExpr :: Num a => Expr -> a
+evalExpr = cata evalExprAlg
+
+
+-- Algebra which simplifies expressions.
+type ExprSimplifyAlg = Algebra ExprF Expr
+
+simplifyExprAlg :: ExprSimplifyAlg
+simplifyExprAlg (Succ (Fix (Pred e))) = e
+simplifyExprAlg (Pred (Fix (Succ e))) = e
+simplifyExprAlg e                     = Fix e
+
+
+-- Simplifier for expressions.
+simplifyExpr :: Expr -> Expr
+simplifyExpr = cata simplifyExprAlg
+
+
+-- Simplified expression.
+expr' :: Expr
+expr' = simplifyExpr expr
+
+
+-- Algebra which converts expressions to strings.
+type ExprRenderAlg = Algebra ExprF String
+
+renderExprAlg :: ExprRenderAlg
+renderExprAlg Zero = "zero"
+renderExprAlg (Succ str) = "Succ (" ++ str ++ ")"
+renderExprAlg (Pred str) = "Pred (" ++ str ++ ")"
+
+
+-- Renderer for expressions.
+renderExpr :: Expr -> String
+renderExpr = cata renderExprAlg
+
+
+-- Algebra which compute a length of expression.
+type ExprLengthAlg a = Algebra ExprF a
+
+exprLengthAlg :: Num a => ExprLengthAlg a
+exprLengthAlg Zero     = 1
+exprLengthAlg (Succ n) = n + 1
+exprLengthAlg (Pred n) = n + 1
+
+
+-- Lenght of expression.
+exprLength :: Num a => Expr -> a
+exprLength = cata exprLengthAlg
+
+
+-- Counts simplification apllications.
+countSimplifications :: Integral a => Expr -> a
+countSimplifications e =
+  let e'    = simplifyExpr e
+      eLen  = exprLength e
+      eLen' = exprLength e'
+      in (eLen - eLen') `div` 2 -- Each simplication removes two operators.
+
+  {- It would be better to do counting in one pass.
+     But this requires modification of simplifyExprAlg by either:
+       * keeping counter of applications.
+       * returning a tuple with boolean value
+         inside denoting success of application
+.
+     I don't know yet how to make it in other way.
+  -}
