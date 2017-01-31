@@ -1,8 +1,9 @@
 {-# LANGUAGE DeriveFunctor #-}
+module BWIFP.Chp1 where
 
 import Prelude hiding (max, pi)
 
-import Control.Functor.Fix
+--import Control.Functor.Fix
 
 -- 1.1.1 Sessions and scripts.
 

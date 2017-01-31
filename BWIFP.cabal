@@ -1,0 +1,27 @@
+name:                BWIFP
+version:             0.0.0
+synopsis:            Excercises from BWIFP book.
+
+license:             GPL-3.0
+license-file:        LICENSE
+author:              Vladimir Pankov
+maintainer:          wowofbob@gmail.com
+copyright:           Copyright (C) 2017 Vladimir Pankov
+homepage:            https://github.com/wowofbob/BWIFP
+category:            Example
+build-type:          Simple
+cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/wowofbob/BWIFP
+
+library
+  exposed-modules:     BWIFP.Chp1
+  build-depends:       base
+                       
+  hs-source-dirs:      src
+  include-dirs:        src
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+
