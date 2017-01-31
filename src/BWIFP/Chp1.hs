@@ -35,13 +35,16 @@ circleArea r = pi * square r
 {- 1.2.1 Reduction. -}
 
 -- 1.2.3
+-- https://www.schoolofhaskell.com/user/bartosz/understanding-algebras
 
+-- Functor's fixed point.
 newtype Fix f = Fix { unFix :: f (Fix f) }
 
-data Number a = Zero | Succ a | Pred a
+-- Defenition of expression.
+data ExprF a = Zero | Succ a | Pred a
   deriving Functor
 
-type Expr = Fix Number
+type Expr = Fix ExprF
 
 zero :: Expr
 zero = Fix Zero
@@ -52,5 +55,31 @@ succ = Fix . Succ
 pred :: Expr -> Expr
 pred = Fix . Pred
 
+
+-- Example expression which should be simplified.
 expr :: Expr
 expr = succ $ pred $ succ $ pred $ pred zero
+
+
+-- Definition of algebra.
+type Algebra f a = f a -> a
+
+
+-- Algebra which evaluates expressions.
+type ExprEvalAlgebra a = Algebra ExprF a
+
+evalNode :: Num a => ExprEvalAlgebra a 
+evalNode Zero     = 0
+evalNode (Succ n) = n + 1
+evalNode (Pred n) = n - 1
+
+
+-- Definition of initial algebra.
+type InitAlgebra f = Algebra f (Fix f)
+
+initAlg :: InitAlgebra f
+initAlg = Fix
+
+
+-- Initial algebra for expressions.
+type ExprInitAlgebra = InitAlgebra ExprF
