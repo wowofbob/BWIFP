@@ -143,7 +143,7 @@ exprLength :: Num a => Expr -> a
 exprLength = cata exprLengthAlg
 
 
--- Counts simplification apllications.
+-- Counts simplification apllications (two-pass).
 countSimplifications :: Integral a => Expr -> a
 countSimplifications e =
   let e'    = simplifyExpr e
@@ -151,11 +151,13 @@ countSimplifications e =
       eLen' = exprLength e'
       in (eLen - eLen') `div` 2 -- Each simplication removes two operators.
 
-  {- It would be better to do counting in one pass.
-     But this requires modification of simplifyExprAlg by either:
-       * keeping counter of applications.
-       * returning a tuple with boolean value
-         inside denoting success of application
-.
-     I don't know yet how to make it in other way.
-  -}
+-- Counts simplification applications (one-pass).
+simplifyExprAlg' :: Algebra ExprF (Int, Expr)
+simplifyExprAlg' (Succ (n, (Fix (Pred e)))) = (n + 1, e)
+simplifyExprAlg' (Pred (n, (Fix (Succ e)))) = (n + 1, e)
+simplifyExprAlg' (Succ (n, e))              = (n, succ e)
+simplifyExprAlg' (Pred (n, e))              = (n, pred e)
+simplifyExprAlg' Zero                       = (0, zero)
+
+countSimplifications' :: Expr -> Int
+countSimplifications' = fst . cata simplifyExprAlg'
