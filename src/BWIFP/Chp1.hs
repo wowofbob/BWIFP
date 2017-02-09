@@ -161,3 +161,15 @@ simplifyExprAlg' Zero                       = (0, zero)
 
 countSimplifications' :: Expr -> Int
 countSimplifications' = fst . cata simplifyExprAlg'
+
+
+-- 1.2.4
+data Post = I | O deriving Show
+
+type PostExpr = [Post]
+
+simplifyPostExpr :: PostExpr -> PostExpr
+simplifyPostExpr (I : _ : _ : x) = x ++ [I, I, O, I]
+simplifyPostExpr (O : _ : _ : x) = x ++ [O, O]
+simplifyPostExpr x               = x
+
